@@ -4,6 +4,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "Code"))
 
 import streamlit as st
+import datetime
 from App import get_response as app_get_response
 
 # ----------------------------------------------------------------------------
@@ -149,6 +150,8 @@ if "user_name" not in st.session_state:
     st.session_state.user_name = None
 if "conversation_ended" not in st.session_state:
     st.session_state.conversation_ended = False
+if "session_start" not in st.session_state:
+    st.session_state.session_start = datetime.datetime.now()
 
 def get_response(raw_text: str) -> str:
     """Wraps App.get_response, syncing Streamlit session state."""
@@ -193,3 +196,34 @@ if user_input:
     st.session_state.messages.append({"role": "assistant", "content": reply})
     with st.chat_message("assistant", avatar=":material/smart_toy:"):
         st.write(reply)
+
+# ----------------------------------------------------------------------------
+# End-of-conversation summary
+# ----------------------------------------------------------------------------
+if st.session_state.conversation_ended:
+    duration = datetime.datetime.now() - st.session_state.session_start
+    minutes, seconds = divmod(int(duration.total_seconds()), 60)
+    user_msg_count = sum(1 for m in st.session_state.messages if m["role"] == "user")
+    name_display = st.session_state.user_name or "there"
+
+    st.markdown(
+        f"""
+        <div style="background: var(--color-background-primary, #ffffff);
+                    border: 0.5px solid rgba(0,0,0,0.1);
+                    border-radius: 12px;
+                    padding: 1.25rem 1.5rem;
+                    margin-top: 1rem;">
+            <p style="font-size: 15px; font-weight: 600; margin: 0 0 10px; color: #1f2a44;">
+                Conversation summary
+            </p>
+            <p style="font-size: 14px; margin: 4px 0; color: #1f2a44;">Chatted with: {name_display}</p>
+            <p style="font-size: 14px; margin: 4px 0; color: #1f2a44;">Messages sent: {user_msg_count}</p>
+            <p style="font-size: 14px; margin: 4px 0; color: #1f2a44;">Session length: {minutes}m {seconds}s</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if st.button("Start a new conversation", use_container_width=True, type="primary"):
+        st.session_state.clear()
+        st.rerun()
