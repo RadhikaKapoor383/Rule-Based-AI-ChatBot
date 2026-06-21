@@ -1,7 +1,7 @@
-"""
-Rule-Based Chatbot — Streamlit Interface
-Run with: streamlit run chatbot_app.py
-"""
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "Code"))
 
 import streamlit as st
 from App import get_response as app_get_response
@@ -110,6 +110,7 @@ with st.sidebar:
         "- `what time is it`\n"
         "- `what day is it`\n"
         "- `calculate 5 + 3`\n"
+        "- `tell me something`\n"
         "- `help`\n"
         "- `bye` / `exit`"
     )

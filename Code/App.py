@@ -27,6 +27,14 @@ compliments = [
     "You ask really good questions."
 ]
 
+random_talks = [
+    "Did you know the chatbot you're talking to runs entirely on if-else logic?",
+    "Here's a thought: the best time to plant a tree was yesterday, the next best time is today.",
+    "Fun fact: this conversation exists because of a single while loop.",
+    "I don't have much to say, but I do enjoy a good joke. Want to hear one?",
+    "Life tip: take a short break, stretch, and drink some water.",
+]
+
 negative_words = ["sad", "angry", "upset", "tired", "stressed", "bad", "depressed", "frustrated"]
 positive_words = ["happy", "great", "excited", "good", "awesome", "fantastic"]
 
@@ -117,10 +125,13 @@ def get_response(user_input, name=None, ended=False):
         reply = f"Chatbot: You're welcome{', ' + name if name else ''}!"
         return reply, name, ended
 
+    elif "tell me something" in user_input or "tell me anything" in user_input or "say something" in user_input:
+        return f"Chatbot: {random.choice(random_talks)}", name, ended
+
     elif "help" in user_input:
         return (
             "Chatbot: Try: hi, my name is ___, joke, fact, quote, compliment, "
-            "time, what day is it, calculate 5 + 3, thanks, or bye.",
+            "time, what day is it, calculate 5 + 3, tell me something, thanks, or bye.",
             name,
             ended,
         )
