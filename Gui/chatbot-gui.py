@@ -1,10 +1,9 @@
-"""
-Rule-Based Chatbot — Streamlit Interface
-Run with: streamlit run chatbot_app.py
-"""
+import sys
+import os
 
-import random
-import datetime
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "Code"))
+
+from App import get_response as app_get_response
 import streamlit as st
 
 # ----------------------------------------------------------------------------
@@ -73,6 +72,13 @@ st.markdown(
     }
     .stChatMessage {
         border-radius: 10px;
+        background-color: #ffffff !important;
+    }
+    .stChatMessage p, .stChatMessage div, .stChatMessage span {
+        color: #1f2a44 !important;
+    }
+    [data-testid="stChatMessageContent"] {
+        color: #1f2a44 !important;
     }
     footer {visibility: hidden;}
     #MainMenu {visibility: hidden;}
@@ -138,64 +144,24 @@ if "user_name" not in st.session_state:
 if "conversation_ended" not in st.session_state:
     st.session_state.conversation_ended = False
 
-JOKES = [
-    "Why do programmers prefer dark mode? Because light attracts bugs.",
-    "I told my computer I needed a break, and it said no problem — it'll sleep too.",
-    "Why was the JavaScript developer sad? Because they didn't know how to null their feelings.",
-    "Why do Python programmers wear glasses? Because they can't C.",
-]
-
-# ----------------------------------------------------------------------------
-# Rule-based response engine
-# ----------------------------------------------------------------------------
 def get_response(raw_text: str) -> str:
-    text = raw_text.strip()
-    lower = text.lower()
-    name = st.session_state.user_name
-
+    """Wraps App.get_response, syncing Streamlit session state."""
     if st.session_state.conversation_ended:
         return "Our conversation has ended. Click 'Restart conversation' in the sidebar to begin again."
 
-    if lower == "":
-        return "Please type something so I can respond."
+    reply, new_name, ended = app_get_response(
+        raw_text,
+        name=st.session_state.user_name,
+        ended=st.session_state.conversation_ended,
+    )
 
-    if lower.startswith(("hi", "hello", "hey")):
-        return f"Hello again, {name}!" if name else "Hello there! What's your name?"
+    # App.py replies are prefixed with "Chatbot: " for console use — strip that for the GUI.
+    if reply.startswith("Chatbot: "):
+        reply = reply[len("Chatbot: "):]
 
-    if lower.startswith(("my name is", "i am", "i'm")):
-        parts = lower.replace("i'm", "my name is").replace("i am", "my name is")
-        candidate = parts.split("my name is", 1)[1].strip(" .!")
-        if candidate:
-            st.session_state.user_name = candidate.capitalize()
-            return f"Nice to meet you, {st.session_state.user_name}! How can I help you today?"
-        return "I didn't quite catch that — could you repeat your name?"
-
-    if "how are you" in lower:
-        return f"I'm doing great, thanks for asking{', ' + name if name else ''}!"
-
-    if "your name" in lower or "who are you" in lower:
-        return "I'm Aria, a simple rule-based chatbot built to demonstrate control flow and decision logic."
-
-    if "joke" in lower:
-        return random.choice(JOKES)
-
-    if "time" in lower:
-        return f"The current time is {datetime.datetime.now().strftime('%H:%M:%S')}."
-
-    if "weather" in lower:
-        return "I can't check live weather in this demo, but a production chatbot could call a weather API here."
-
-    if "thank" in lower:
-        return f"You're welcome{', ' + name if name else ''}!"
-
-    if "help" in lower:
-        return "You can greet me, tell me your name, ask for a joke or the time, or say 'bye' to exit."
-
-    if lower.startswith(("bye", "exit", "quit")):
-        st.session_state.conversation_ended = True
-        return f"Goodbye{', ' + name if name else ''}! It was nice chatting with you."
-
-    return "Sorry, I don't understand that yet. Try 'help' to see what I can do."
+    st.session_state.user_name = new_name
+    st.session_state.conversation_ended = ended
+    return reply
 
 
 # ----------------------------------------------------------------------------
